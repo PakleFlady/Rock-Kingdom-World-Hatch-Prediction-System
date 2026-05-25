@@ -1,0 +1,269 @@
+:root {
+  color-scheme: light;
+  --bg: #f7f4ed;
+  --panel: #ffffff;
+  --ink: #1f2933;
+  --muted: #637083;
+  --line: #ded7cb;
+  --primary: #2d6a62;
+  --primary-dark: #174a45;
+  --accent: #c94f2d;
+  --soft: #ecf5f2;
+  --shadow: 0 18px 45px rgba(31, 41, 51, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    linear-gradient(135deg, rgba(45, 106, 98, 0.08), transparent 34%),
+    var(--bg);
+  color: var(--ink);
+  font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 28px clamp(18px, 4vw, 48px) 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+h1 {
+  font-size: clamp(24px, 3vw, 38px);
+  font-weight: 800;
+}
+
+h2 {
+  font-size: 18px;
+}
+
+.topbar p,
+.message,
+.panelHead span {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
+  gap: 18px;
+  padding: 22px clamp(18px, 4vw, 48px) 42px;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  padding: 18px;
+}
+
+.predictor,
+.dataPanel {
+  grid-row: span 2;
+}
+
+.panelHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+label {
+  display: grid;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.wide {
+  grid-column: 1 / -1;
+}
+
+input,
+textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fffdfa;
+  color: var(--ink);
+  outline: none;
+}
+
+input {
+  height: 42px;
+  padding: 0 12px;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 148px;
+  padding: 12px;
+  line-height: 1.6;
+}
+
+input:focus,
+textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(45, 106, 98, 0.16);
+}
+
+button {
+  min-height: 42px;
+  border: 0;
+  border-radius: 6px;
+  padding: 0 16px;
+  background: var(--primary);
+  color: #fff;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+button:hover {
+  background: var(--primary-dark);
+}
+
+.formGrid button {
+  grid-column: 1 / -1;
+}
+
+.results {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.resultItem {
+  display: grid;
+  grid-template-columns: minmax(80px, 1fr) minmax(120px, 2fr) 74px;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fffdfa;
+}
+
+.bar {
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e8e0d3;
+}
+
+.bar span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+
+.empty {
+  color: var(--muted);
+  border: 1px dashed var(--line);
+  border-radius: 7px;
+  padding: 14px;
+}
+
+.actionRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.tableWrap {
+  max-height: 520px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+th,
+td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  white-space: nowrap;
+}
+
+th {
+  position: sticky;
+  top: 0;
+  background: var(--soft);
+  color: var(--primary-dark);
+}
+
+td:last-child {
+  width: 72px;
+  text-align: right;
+}
+
+.deleteButton {
+  min-height: 30px;
+  padding: 0 10px;
+  background: #efe7dc;
+  color: var(--ink);
+}
+
+.deleteButton:hover {
+  background: #ded2c2;
+}
+
+@media (max-width: 900px) {
+  .topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .predictor,
+  .dataPanel {
+    grid-row: auto;
+  }
+}
+
+@media (max-width: 560px) {
+  .formGrid,
+  .resultItem {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,5 @@
+from hatch_predictor.server import main
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Rock Kingdom World Hatch Prediction System</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <h1>Rock Kingdom World Hatch Prediction System</h1>
+        <p id="modelStatus">加载模型中...</p>
+      </div>
+      <button id="refreshButton" type="button">刷新</button>
+    </header>
+
+    <main class="layout">
+      <section class="panel predictor">
+        <div class="panelHead">
+          <h2>预测</h2>
+        </div>
+        <form id="predictForm" class="formGrid">
+          <label>
+            尺寸
+            <input id="predictSize" name="size" type="number" min="0" step="0.0001" required />
+          </label>
+          <label>
+            重量
+            <input id="predictWeight" name="weight" type="number" min="0" step="0.0001" required />
+          </label>
+          <button type="submit">输出精灵概率</button>
+        </form>
+        <div id="predictionResults" class="results empty">录入数据后即可预测。</div>
+      </section>
+
+      <section class="panel">
+        <div class="panelHead">
+          <h2>单条录入</h2>
+        </div>
+        <form id="sampleForm" class="formGrid">
+          <label>
+            尺寸
+            <input id="sampleSize" name="size" type="number" min="0" step="0.0001" required />
+          </label>
+          <label>
+            重量
+            <input id="sampleWeight" name="weight" type="number" min="0" step="0.0001" required />
+          </label>
+          <label class="wide">
+            精灵
+            <input id="sampleCreature" name="creature" type="text" maxlength="40" required />
+          </label>
+          <button type="submit">添加并训练</button>
+        </form>
+        <p id="sampleMessage" class="message"></p>
+      </section>
+
+      <section class="panel">
+        <div class="panelHead">
+          <h2>批量录入</h2>
+        </div>
+        <textarea id="bulkText" rows="7" placeholder="每行一条，例如：&#10;12.3 4.5 火花&#10;12.4,4.4,火花"></textarea>
+        <div class="actionRow">
+          <button id="bulkButton" type="button">批量添加并训练</button>
+          <span id="bulkMessage" class="message"></span>
+        </div>
+      </section>
+
+      <section class="panel dataPanel">
+        <div class="panelHead">
+          <h2>数据集</h2>
+          <span id="sampleCount">0 条</span>
+        </div>
+        <div class="tableWrap">
+          <table>
+            <thead>
+              <tr>
+                <th>尺寸</th>
+                <th>重量</th>
+                <th>精灵</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="sampleTable"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
