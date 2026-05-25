@@ -43,6 +43,7 @@ textarea {
 
 h1,
 h2,
+h3,
 p {
   margin: 0;
 }
@@ -56,9 +57,14 @@ h2 {
   font-size: 18px;
 }
 
+h3 {
+  font-size: 15px;
+}
+
 .topbar p,
 .message,
-.panelHead span {
+.panelHead span,
+.suggestHead span {
   color: var(--muted);
   font-size: 14px;
 }
@@ -191,6 +197,47 @@ button:hover {
   border: 1px dashed var(--line);
   border-radius: 7px;
   padding: 14px;
+}
+
+.suggestBox {
+  margin-top: 16px;
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+
+.suggestHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.suggestions {
+  display: grid;
+  gap: 8px;
+}
+
+.suggestButton {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 38px;
+  border: 1px solid var(--line);
+  background: #fffdfa;
+  color: var(--ink);
+  text-align: left;
+}
+
+.suggestButton:hover {
+  border-color: var(--primary);
+  background: var(--soft);
+  color: var(--primary-dark);
+}
+
+.suggestButton strong {
+  color: var(--accent);
 }
 
 .actionRow {
