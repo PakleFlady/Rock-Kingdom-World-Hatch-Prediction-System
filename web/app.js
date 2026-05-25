@@ -125,6 +125,17 @@ function formPayload(form) {
   return Object.fromEntries(data.entries());
 }
 
+function switchView(viewId) {
+  document.querySelectorAll(".view").forEach((view) => {
+    view.classList.toggle("active", view.id === viewId);
+  });
+  document.querySelectorAll(".viewTab").forEach((tab) => {
+    const active = tab.dataset.viewTarget === viewId;
+    tab.classList.toggle("active", active);
+    tab.setAttribute("aria-selected", String(active));
+  });
+}
+
 function readSampleSizeWeight() {
   const size = $("#sampleSize").value.trim();
   const weight = $("#sampleWeight").value.trim();
@@ -275,6 +286,9 @@ $("#sampleTable").addEventListener("click", async (event) => {
 $("#refreshButton").addEventListener("click", refreshAll);
 $("#sampleSize").addEventListener("input", scheduleSampleSuggestion);
 $("#sampleWeight").addEventListener("input", scheduleSampleSuggestion);
+document.querySelectorAll(".viewTab").forEach((tab) => {
+  tab.addEventListener("click", () => switchView(tab.dataset.viewTarget));
+});
 
 refreshAll().catch((error) => {
   $("#modelStatus").textContent = error.message;
