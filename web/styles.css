@@ -129,7 +129,7 @@ h3 {
 
 .dataPanel {
   grid-column: 2;
-  grid-row: 1 / span 2;
+  grid-row: 1 / span 3;
 }
 
 .panelHead {
@@ -281,6 +281,64 @@ button:hover {
 
 .suggestButton strong {
   color: var(--accent);
+}
+
+.chartPanel {
+  min-width: 0;
+}
+
+.chartWrap {
+  position: relative;
+  height: 380px;
+  min-height: 280px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  overflow: hidden;
+  background: #fffdfa;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.chartTooltip {
+  position: absolute;
+  display: none;
+  pointer-events: none;
+  max-width: 220px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: rgba(255, 253, 250, 0.96);
+  color: var(--ink);
+  box-shadow: 0 10px 24px rgba(31, 41, 51, 0.12);
+  font-size: 13px;
+  line-height: 1.5;
+  z-index: 2;
+}
+
+.chartLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.legendSwatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(31, 41, 51, 0.16);
 }
 
 .actionRow {
