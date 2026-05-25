@@ -1,6 +1,8 @@
 const state = {
   samples: [],
   stats: null,
+  sampleSuggestTimer: null,
+  sampleSuggestRequestId: 0,
 };
 
 const $ = (selector) => document.querySelector(selector);
@@ -81,6 +83,30 @@ function renderPrediction(results) {
   }
 }
 
+function renderSampleSuggestions(results) {
+  const container = $("#sampleSuggestions");
+  container.classList.remove("empty");
+  container.innerHTML = "";
+
+  if (!results.length) {
+    container.classList.add("empty");
+    container.textContent = "没有概率大于 1% 的候选；可以直接填写正确精灵后添加。";
+    return;
+  }
+
+  for (const result of results) {
+    const button = document.createElement("button");
+    button.className = "suggestButton";
+    button.type = "button";
+    button.dataset.creature = result.creature;
+    button.innerHTML = `
+      <span>${escapeHtml(result.creature)}</span>
+      <strong>${result.percent}</strong>
+    `;
+    container.append(button);
+  }
+}
+
 function formatNumber(value) {
   return Number(value).toLocaleString("zh-CN", { maximumFractionDigits: 4 });
 }
@@ -99,19 +125,103 @@ function formPayload(form) {
   return Object.fromEntries(data.entries());
 }
 
+function readSampleSizeWeight() {
+  const size = $("#sampleSize").value.trim();
+  const weight = $("#sampleWeight").value.trim();
+  if (!isPositiveNumber(size) || !isPositiveNumber(weight)) {
+    return null;
+  }
+  return { size, weight };
+}
+
+function isPositiveNumber(value) {
+  const number = Number(value);
+  return Number.isFinite(number) && number > 0;
+}
+
+async function addSample(payload) {
+  return request("/api/samples", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+function scheduleSampleSuggestion() {
+  clearTimeout(state.sampleSuggestTimer);
+  const status = $("#sampleSuggestStatus");
+  const container = $("#sampleSuggestions");
+  const sizeWeight = readSampleSizeWeight();
+
+  if (!sizeWeight) {
+    state.sampleSuggestRequestId += 1;
+    status.textContent = "输入尺寸和重量后自动显示。";
+    container.classList.add("empty");
+    container.textContent = "候选只用于快速添加数据。";
+    return;
+  }
+
+  status.textContent = "正在匹配候选...";
+  state.sampleSuggestTimer = setTimeout(() => {
+    fetchSampleSuggestion(sizeWeight);
+  }, 350);
+}
+
+async function fetchSampleSuggestion(sizeWeight) {
+  const requestId = ++state.sampleSuggestRequestId;
+  try {
+    const payload = await request("/api/predict", {
+      method: "POST",
+      body: JSON.stringify(sizeWeight),
+    });
+    if (requestId !== state.sampleSuggestRequestId) return;
+    $("#sampleSuggestStatus").textContent = `找到 ${payload.results.length} 个候选`;
+    renderSampleSuggestions(payload.results);
+  } catch (error) {
+    if (requestId !== state.sampleSuggestRequestId) return;
+    $("#sampleSuggestStatus").textContent = "候选匹配失败";
+    const container = $("#sampleSuggestions");
+    container.classList.add("empty");
+    container.textContent = error.message;
+  }
+}
+
 $("#sampleForm").addEventListener("submit", async (event) => {
   event.preventDefault();
   const form = event.currentTarget;
   const message = $("#sampleMessage");
   message.textContent = "训练中...";
   try {
-    const payload = await request("/api/samples", {
-      method: "POST",
-      body: JSON.stringify(formPayload(form)),
-    });
+    const payload = await addSample(formPayload(form));
     message.textContent = payload.message;
     form.reset();
     await refreshAll();
+    scheduleSampleSuggestion();
+  } catch (error) {
+    message.textContent = error.message;
+  }
+});
+
+$("#sampleSuggestions").addEventListener("click", async (event) => {
+  const button = event.target.closest(".suggestButton");
+  if (!button) return;
+
+  const sizeWeight = readSampleSizeWeight();
+  const message = $("#sampleMessage");
+  if (!sizeWeight) {
+    message.textContent = "请先输入有效的尺寸和重量。";
+    return;
+  }
+
+  message.textContent = "正在添加候选...";
+  try {
+    const payload = await addSample({
+      ...sizeWeight,
+      creature: button.dataset.creature,
+    });
+    message.textContent = payload.message;
+    $("#sampleForm").reset();
+    await refreshAll();
+    scheduleSampleSuggestion();
   } catch (error) {
     message.textContent = error.message;
   }
@@ -163,6 +273,8 @@ $("#sampleTable").addEventListener("click", async (event) => {
 });
 
 $("#refreshButton").addEventListener("click", refreshAll);
+$("#sampleSize").addEventListener("input", scheduleSampleSuggestion);
+$("#sampleWeight").addEventListener("input", scheduleSampleSuggestion);
 
 refreshAll().catch((error) => {
   $("#modelStatus").textContent = error.message;
