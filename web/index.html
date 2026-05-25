@@ -39,6 +39,17 @@
             </form>
             <div id="predictionResults" class="results empty">录入数据后即可预测。</div>
           </section>
+          <section class="panel chartPanel">
+            <div class="panelHead">
+              <h2>数据分布图</h2>
+              <span>尺寸 × 重量</span>
+            </div>
+            <div class="chartWrap">
+              <canvas id="predictChart" aria-label="预测页数据分布图"></canvas>
+              <div id="predictChartTooltip" class="chartTooltip"></div>
+            </div>
+            <div id="predictChartLegend" class="chartLegend"></div>
+          </section>
         </div>
       </section>
 
@@ -82,6 +93,18 @@
               <button id="bulkButton" type="button">批量添加并训练</button>
               <span id="bulkMessage" class="message"></span>
             </div>
+          </section>
+
+          <section class="panel chartPanel">
+            <div class="panelHead">
+              <h2>数据可视化</h2>
+              <span>尺寸 × 重量</span>
+            </div>
+            <div class="chartWrap">
+              <canvas id="dataChart" aria-label="添加数据页数据分布图"></canvas>
+              <div id="dataChartTooltip" class="chartTooltip"></div>
+            </div>
+            <div id="dataChartLegend" class="chartLegend"></div>
           </section>
 
           <section class="panel dataPanel">
