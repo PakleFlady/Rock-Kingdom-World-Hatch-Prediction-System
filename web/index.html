@@ -39,17 +39,6 @@
             </form>
             <div id="predictionResults" class="results empty">录入数据后即可预测。</div>
           </section>
-          <section class="panel chartPanel">
-            <div class="panelHead">
-              <h2>数据分布图</h2>
-              <span>尺寸 × 重量</span>
-            </div>
-            <div class="chartWrap">
-              <canvas id="predictChart" aria-label="预测页数据分布图"></canvas>
-              <div id="predictChartTooltip" class="chartTooltip"></div>
-            </div>
-            <div id="predictChartLegend" class="chartLegend"></div>
-          </section>
         </div>
       </section>
 
@@ -98,7 +87,7 @@
           <section class="panel chartPanel">
             <div class="panelHead">
               <h2>数据可视化</h2>
-              <span>尺寸 × 重量</span>
+              <span id="chartFilterStatus">全部精灵</span>
             </div>
             <div class="chartWrap">
               <canvas id="dataChart" aria-label="添加数据页数据分布图"></canvas>
@@ -111,6 +100,25 @@
             <div class="panelHead">
               <h2>数据集</h2>
               <span id="sampleCount">0 条</span>
+            </div>
+            <div class="filterBar">
+              <label class="comboLabel">
+                筛选精灵
+                <div id="creatureFilterCombo" class="comboBox">
+                  <input
+                    id="creatureFilter"
+                    type="search"
+                    role="combobox"
+                    aria-expanded="false"
+                    aria-controls="creatureFilterMenu"
+                    placeholder="全部精灵，或输入关键字"
+                    autocomplete="off"
+                  />
+                  <button id="creatureFilterToggle" class="comboToggle" type="button" aria-label="展开筛选精灵"></button>
+                  <div id="creatureFilterMenu" class="comboMenu" role="listbox"></div>
+                </div>
+              </label>
+              <button id="clearFilterButton" class="secondaryButton" type="button">清除筛选</button>
             </div>
             <div class="tableWrap">
               <table>

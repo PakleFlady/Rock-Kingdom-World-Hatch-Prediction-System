@@ -3,7 +3,8 @@ const state = {
   stats: null,
   sampleSuggestTimer: null,
   sampleSuggestRequestId: 0,
-  currentPredictionPoint: null,
+  creatureFilter: "",
+  filterOpen: false,
   chartPoints: new Map(),
 };
 
@@ -47,6 +48,7 @@ async function refreshAll() {
   ]);
   state.samples = samplePayload.samples;
   state.stats = statsPayload;
+  renderCreatureOptions();
   renderSamples();
   renderStatus();
   renderAllCharts();
@@ -58,18 +60,21 @@ function renderStatus() {
 }
 
 function renderSamples() {
-  $("#sampleCount").textContent = `${state.samples.length} 条`;
+  const samples = filteredSamples();
+  $("#sampleCount").textContent = state.creatureFilter
+    ? `${samples.length} / ${state.samples.length} 条`
+    : `${state.samples.length} 条`;
   const tbody = $("#sampleTable");
   tbody.innerHTML = "";
 
-  if (state.samples.length === 0) {
+  if (samples.length === 0) {
     const row = document.createElement("tr");
-    row.innerHTML = `<td colspan="4">还没有数据。</td>`;
+    row.innerHTML = `<td colspan="4">${state.samples.length ? "没有符合筛选的数据。" : "还没有数据。"}</td>`;
     tbody.append(row);
     return;
   }
 
-  for (const sample of [...state.samples].reverse()) {
+  for (const sample of [...samples].reverse()) {
     const row = document.createElement("tr");
     row.innerHTML = `
       <td>${formatNumber(sample.size)}</td>
@@ -130,11 +135,16 @@ function renderSampleSuggestions(results) {
 }
 
 function renderAllCharts() {
-  renderScatterChart("predictChart", "predictChartLegend", state.currentPredictionPoint);
-  renderScatterChart("dataChart", "dataChartLegend", null);
+  const samples = filteredSamples();
+  const status = $("#chartFilterStatus");
+  if (status) {
+    const label = filterLabel();
+    status.textContent = label ? `${label} · ${samples.length} 条` : "全部精灵";
+  }
+  renderScatterChart("dataChart", "dataChartLegend", samples);
 }
 
-function renderScatterChart(canvasId, legendId, marker) {
+function renderScatterChart(canvasId, legendId, samples) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
 
@@ -151,20 +161,16 @@ function renderScatterChart(canvasId, legendId, marker) {
   const chartPoints = [];
   state.chartPoints.set(canvasId, chartPoints);
 
-  if (!state.samples.length) {
+  if (!samples.length) {
     drawEmptyChart(ctx, width, height, "暂无数据");
     renderLegend(legendId, []);
     return;
   }
 
-  const classes = [...new Set(state.samples.map((sample) => sample.creature))].sort();
+  const classes = [...new Set(samples.map((sample) => sample.creature))].sort();
   const colorMap = Object.fromEntries(classes.map((name, index) => [name, palette[index % palette.length]]));
-  const allSizes = state.samples.map((sample) => Number(sample.size));
-  const allWeights = state.samples.map((sample) => Number(sample.weight));
-  if (marker) {
-    allSizes.push(Number(marker.size));
-    allWeights.push(Number(marker.weight));
-  }
+  const allSizes = samples.map((sample) => Number(sample.size));
+  const allWeights = samples.map((sample) => Number(sample.weight));
 
   const bounds = paddedBounds(allSizes, allWeights);
   const padding = { top: 22, right: 22, bottom: 48, left: 62 };
@@ -175,35 +181,17 @@ function renderScatterChart(canvasId, legendId, marker) {
 
   drawAxes(ctx, width, height, padding, bounds);
 
-  for (const sample of state.samples) {
+  for (const sample of samples) {
     const x = toX(Number(sample.size));
     const y = toY(Number(sample.weight));
+    const color = colorMap[sample.creature] || palette[0];
     ctx.beginPath();
     ctx.arc(x, y, 4.5, 0, Math.PI * 2);
-    ctx.fillStyle = colorMap[sample.creature] || palette[0];
+    ctx.fillStyle = color;
     ctx.globalAlpha = 0.82;
     ctx.fill();
     ctx.globalAlpha = 1;
     chartPoints.push({ x, y, radius: 8, sample, type: "sample" });
-  }
-
-  if (marker) {
-    const x = toX(Number(marker.size));
-    const y = toY(Number(marker.weight));
-    ctx.save();
-    ctx.strokeStyle = "#111827";
-    ctx.fillStyle = "#ffffff";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(x, y - 9);
-    ctx.lineTo(x + 9, y);
-    ctx.lineTo(x, y + 9);
-    ctx.lineTo(x - 9, y);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-    ctx.restore();
-    chartPoints.push({ x, y, radius: 12, sample: marker, type: "marker" });
   }
 
   renderLegend(legendId, classes.map((name) => ({ name, color: colorMap[name] })));
@@ -314,7 +302,7 @@ function handleChartHover(event, canvasId, tooltipId) {
     return;
   }
 
-  const label = hit.type === "marker" ? "当前输入" : hit.sample.creature;
+  const label = hit.sample.creature;
   tooltip.innerHTML = `
     <strong>${escapeHtml(label)}</strong><br />
     尺寸：${formatNumber(hit.sample.size)}<br />
@@ -341,6 +329,69 @@ function escapeHtml(value) {
 function formPayload(form) {
   const data = new FormData(form);
   return Object.fromEntries(data.entries());
+}
+
+function filteredSamples() {
+  const keyword = state.creatureFilter.trim().toLocaleLowerCase("zh-CN");
+  return state.samples.filter((sample) => {
+    return !keyword || sample.creature.toLocaleLowerCase("zh-CN").includes(keyword);
+  });
+}
+
+function filterLabel() {
+  return state.creatureFilter.trim() ? `包含“${state.creatureFilter.trim()}”` : "";
+}
+
+function creatureNames() {
+  return [...new Set(state.samples.map((sample) => sample.creature))].sort();
+}
+
+function matchingCreatureNames() {
+  const keyword = state.creatureFilter.trim().toLocaleLowerCase("zh-CN");
+  return creatureNames().filter((creature) => !keyword || creature.toLocaleLowerCase("zh-CN").includes(keyword));
+}
+
+function renderCreatureOptions() {
+  const menu = $("#creatureFilterMenu");
+  const input = $("#creatureFilter");
+  if (!menu || !input) return;
+
+  input.setAttribute("aria-expanded", String(state.filterOpen));
+  menu.innerHTML = "";
+  if (!state.filterOpen) {
+    return;
+  }
+
+  const creatures = [...new Set(state.samples.map((sample) => sample.creature))].sort();
+  const matches = matchingCreatureNames();
+  const allButton = document.createElement("button");
+  allButton.className = "comboOption";
+  allButton.type = "button";
+  allButton.dataset.creature = "";
+  allButton.textContent = "全部精灵";
+  menu.append(allButton);
+
+  if (creatures.length && !matches.length) {
+    const empty = document.createElement("div");
+    empty.className = "comboEmpty";
+    empty.textContent = "没有匹配的精灵";
+    menu.append(empty);
+    return;
+  }
+
+  for (const creature of matches) {
+    const button = document.createElement("button");
+    button.className = "comboOption";
+    button.type = "button";
+    button.dataset.creature = creature;
+    button.textContent = creature;
+    menu.append(button);
+  }
+}
+
+function setFilterOpen(open) {
+  state.filterOpen = open;
+  renderCreatureOptions();
 }
 
 function switchView(viewId) {
@@ -488,12 +539,7 @@ $("#predictForm").addEventListener("submit", async (event) => {
       method: "POST",
       body: JSON.stringify(payload),
     });
-    state.currentPredictionPoint = {
-      size: Number(payload.size),
-      weight: Number(payload.weight),
-    };
     renderPrediction(response.results);
-    renderAllCharts();
   } catch (error) {
     container.textContent = error.message;
   }
@@ -511,11 +557,53 @@ $("#sampleTable").addEventListener("click", async (event) => {
 $("#refreshButton").addEventListener("click", refreshAll);
 $("#sampleSize").addEventListener("input", scheduleSampleSuggestion);
 $("#sampleWeight").addEventListener("input", scheduleSampleSuggestion);
+$("#creatureFilter").addEventListener("input", (event) => {
+  state.creatureFilter = event.target.value;
+  state.filterOpen = true;
+  renderSamples();
+  renderAllCharts();
+  renderCreatureOptions();
+});
+$("#creatureFilter").addEventListener("focus", () => {
+  setFilterOpen(true);
+});
+$("#creatureFilter").addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    setFilterOpen(false);
+    $("#creatureFilter").blur();
+  }
+});
+$("#creatureFilterToggle").addEventListener("click", () => {
+  setFilterOpen(!state.filterOpen);
+  $("#creatureFilter").focus();
+});
+$("#creatureFilterMenu").addEventListener("click", (event) => {
+  const option = event.target.closest(".comboOption");
+  if (!option) return;
+  state.creatureFilter = option.dataset.creature || "";
+  $("#creatureFilter").value = state.creatureFilter;
+  setFilterOpen(false);
+  renderSamples();
+  renderAllCharts();
+});
+$("#clearFilterButton").addEventListener("click", () => {
+  state.creatureFilter = "";
+  $("#creatureFilter").value = "";
+  setFilterOpen(false);
+  renderSamples();
+  renderAllCharts();
+});
+document.addEventListener("click", (event) => {
+  const combo = $("#creatureFilterCombo");
+  if (combo && !combo.contains(event.target)) {
+    setFilterOpen(false);
+  }
+});
 document.querySelectorAll(".viewTab").forEach((tab) => {
   tab.addEventListener("click", () => switchView(tab.dataset.viewTarget));
 });
-["predictChart", "dataChart"].forEach((canvasId) => {
-  const tooltipId = canvasId === "predictChart" ? "predictChartTooltip" : "dataChartTooltip";
+["dataChart"].forEach((canvasId) => {
+  const tooltipId = "dataChartTooltip";
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
   canvas.addEventListener("mousemove", (event) => handleChartHover(event, canvasId, tooltipId));
